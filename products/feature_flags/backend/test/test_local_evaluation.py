@@ -888,10 +888,12 @@ class TestLocalEvaluationBatch(BaseTest):
         )
 
         results = _get_flags_response_for_local_evaluation_batch([team])
-        flag_keys = {f["key"] for f in results[team.id]["flags"]}
+        flags_by_key = {f["key"]: f for f in results[team.id]["flags"]}
+        flag_keys = set(flags_by_key)
 
         if should_include:
             assert f"flag-{desc}" in flag_keys, f"Expected flag-{desc} to be included"
+            assert flags_by_key[f"flag-{desc}"]["is_remote_configuration"] is (is_remote_config is True)
         else:
             assert f"flag-{desc}" not in flag_keys, f"Expected flag-{desc} to be excluded"
 

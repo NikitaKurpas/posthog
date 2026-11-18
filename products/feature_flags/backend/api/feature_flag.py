@@ -3957,6 +3957,29 @@ class EvaluationFeatureFlagSerializer(MinimalFeatureFlagSerializer):
         return experiments_api.flag_has_live_experiment(feature_flag.pk)
 
 
+class LocalEvaluationFeatureFlagSerializer(EvaluationFeatureFlagSerializer):
+    """Flag representation for the local-evaluation definitions that server SDKs poll.
+
+    Adds `is_remote_configuration` on top of the evaluation shape. It lives here rather than on
+    EvaluationFeatureFlagSerializer so the flags cache the Rust service deserializes keeps its shape.
+    """
+
+    is_remote_configuration = serializers.SerializerMethodField(
+        help_text=(
+            "True if the flag is a remote config flag. SDKs use this to answer remote config payload requests "
+            "from the definitions, the way the remote_config endpoint would, instead of calling it."
+        )
+    )
+
+    class Meta(EvaluationFeatureFlagSerializer.Meta):
+        fields = [*EvaluationFeatureFlagSerializer.Meta.fields, "is_remote_configuration"]
+
+    @extend_schema_field(OpenApiTypes.BOOL)
+    def get_is_remote_configuration(self, feature_flag: FeatureFlag) -> bool:
+        # The column is nullable for flags that predate it, and those are not remote config.
+        return feature_flag.is_remote_configuration is True
+
+
 class MyFlagsResponseSerializer(serializers.Serializer):
     feature_flag = MinimalFeatureFlagSerializer()
     value = serializers.JSONField()

@@ -593,7 +593,7 @@ def _get_flags_response_for_local_evaluation_batch(teams: list[Team]) -> dict[in
     group type mappings in bulk, then processes one team's flags at a time. A team
     whose own build fails is left out, so callers keep its previous cache entry.
     """
-    from products.feature_flags.backend.api.feature_flag import EvaluationFeatureFlagSerializer
+    from products.feature_flags.backend.api.feature_flag import LocalEvaluationFeatureFlagSerializer
 
     if not teams:
         return {}
@@ -746,7 +746,7 @@ def _get_flags_response_for_local_evaluation_batch(teams: list[Team]) -> dict[in
                     cohort_ids = _flag_cohort_ids(
                         feature_flag.get_filters(), project_cohorts, cohort_definitions, malformed_cohort_ids
                     )
-                    flags_data.append(EvaluationFeatureFlagSerializer(feature_flag, context={}).data)
+                    flags_data.append(LocalEvaluationFeatureFlagSerializer(feature_flag, context={}).data)
                 except _MALFORMED_DEFINITION_ERRORS:
                     excluded_by_team[tid][str(feature_flag.pk)] = feature_flag.key
                     logger.warning(
